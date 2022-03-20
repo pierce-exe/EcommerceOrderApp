@@ -46,7 +46,7 @@ file_out.close()
 
 #Connecting to the OrderDept socket 
 s_order = socket.socket()             # Create a socket object
-port = 60000                    # Reserve a port for your service.
+port = 40000                    # Reserve a port for your service.
 
 s_order.connect(('127.0.0.1', port))
 

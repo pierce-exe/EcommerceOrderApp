@@ -6,6 +6,7 @@ Created on Sat Mar 19
 """
 #List of imports needed for the code 
 import socket 
+import random
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 import time
@@ -42,19 +43,81 @@ file_out.close()
 
 #The order department acts as a server, the purchaser and supervisor both connect to the socket 
 port = 60000                    # Reserve a port for your service.
-s = socket.socket()             # Create a socket object
+s_purch = socket.socket()             # Create a socket object
 host = socket.gethostname()     # Get local machine name
 print(host)
-s.bind(('127.0.0.1', port))            # Bind to the port
-s.listen(5)                     # Now wait for client connection.
-print("Waiting for client to connect")
+s_purch.bind(('127.0.0.1', port))            # Bind to the port
+s_purch.listen(5)                     # Now wait for client connection.
+print("Waiting for purchaser client to connect")
+
+#Creating a second TCP socket for the supervisor to connect to 
+port = 40000                    # Reserve a port for your service.
+s_super = socket.socket()             # Create a socket object
+host = socket.gethostname()     # Get local machine name
+print(host)
+s_super.bind(('127.0.0.1', port))            # Bind to the port
+s_super.listen(5)                     # Now wait for client connection.
+print("Waiting for supervisor client to connect")
 
 
 while True:
-    conn, addr = s.accept()     # Establish connection with client.
-    print("Accepted connection request from client")
+    conn_purch, addr = s_purch.accept()     # Establish connection with client.
+    print("Accepted connection request from purchaser client")
     
+    conn_super, addr = s_super.accept() #Establish connection with client
+    print("Accepted connection request from supervisor client")
+    
+    #Get public key of the Purchaser and Supervisor to encrypt messages
+    file_in = open("purchaser_public_key.pem", "rb")
+    pub_key_purch = file_in.read()
+    file_in.close()
 
+    file_in = open("supervisor_public_key.pem", "rb")
+    pub_key_super = file_in.read()
+    file_in.close()
+
+    #Initialize the public key objects 
+    pub_key_purch = RSA.importKey(pub_key_purch)
+    public_key_purch = PKCS1_OAEP.new(pub_key_purch)
+    
+    pub_key_super = RSA.importKey(pub_key_super)
+    public_key_super = PKCS1_OAEP.new(pub_key_super)
+ 
+    #Recieve key exchange msg 1 from both clients
+    rec_msg1_purch = conn_purch.recv(1024)       
+    rec_msg1_super = conn_super.recv(1024)
+
+    #Decrypt messages with private key 
+    decrypted_key_msg1_purch = priv_key_order.decrypt(rec_msg1_purch)
+    timestamp = decrypted_key_msg1_purch[17:]
+    valid_msg1 = timestamp_verify(timestamp)
+    if(~valid_msg1):
+        print("Invalid initial key exchange message recieved from supervisor")
+        conn_purch.close()
+    
+    #Decrypt messages with private key 
+    decrypted_key_msg1_super = priv_key_order.decrypt(rec_msg1_super)
+    timestamp = decrypted_key_msg1_super[18:]
+    valid_msg1 = timestamp_verify(timestamp)
+    if(~valid_msg1):
+        print("Invalid initial key exchange message recieved from supervisor")
+        conn_super.close()
+        
+    #Save received nonce of purchaser and supervisor 
+    purch_nonce = decrypted_key_msg1_purch[:8]
+    super_nonce = decrypted_key_msg1_super[:8]
+    
+    nonce_order = ''.join([str(random.randint(0,9)) for i in range(8)])
+    
+    #Key exchange message 2: Send back to supervisor and purchaser------------
+    key_msg2_purch = purch_nonce + nonce_order + str(time.time())
+    encrypt_msg2_purch = public_key_purch.encrypt(key_msg2_purch.encode('utf-8'))
+    conn_purch.send(encrypt_msg2_purch)
+    
+    key_msg2_super = super_nonce + nonce_order + str(time.time())
+    encrypt_msg2_super = public_key_super.encrypt(key_msg2_super.encode('utf-8'))
+    conn_super.send(encrypt_msg2_super)
+    
     
     #Close the socket once the transmission is complete
     #conn.close();
