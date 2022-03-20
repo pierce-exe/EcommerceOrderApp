@@ -7,6 +7,7 @@ Created on Sat Mar 19
 
 #List of imports needed for the code 
 import socket 
+import random
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 import time
@@ -60,10 +61,38 @@ while True:
 
     #Connect to the socket of the OrderDept when sending an order
     #Connecting to the OrderDept socket 
-    #s = socket.socket()             # Create a socket object
-    #port = 60000                    # Reserve a port for your service.
+    s_order = socket.socket()             # Create a socket object
+    port = 60000                    # Reserve a port for your service.
     
-    #s.connect(('127.0.0.1', port))
+    s_order.connect(('127.0.0.1', port))
 
+    #Get public key of the Supervisor and OrderDept to encrypt messages
+    file_in = open("supervisor_public_key.pem", "rb")
+    pub_key_super = file_in.read()
+    file_in.close()
+
+    file_in = open("orderDept_public_key.pem", "rb")
+    pub_key_order = file_in.read()
+    file_in.close()
+
+    #Initialize the public key objects 
+    pub_key_super = RSA.importKey(pub_key_super)
+    public_key_super = PKCS1_OAEP.new(pub_key_super)
+
+    pub_key_order = RSA.importKey(pub_key_order)
+    public_key_order = PKCS1_OAEP.new(pub_key_order)
+    
+    #Initial key exchange message -------------------------------------------
+    #Send an initial message to the order department 
+    nonce_purch = ''.join([str(random.randint(0,9)) for i in range(8)])
+    key_msg1 = nonce_purch + "PURCHASER" + str(time.time())
+    
+    encrypt_key_msg1_order = public_key_order.encrypt(key_msg1.encode('utf-8'))
+    s_order.send(encrypt_key_msg1_order)
+
+    #Receive msg1 key exchange from supervisor -------------------------------
+    
+    
+    
     #Close the socket once the transmission is complete
     #conn.close();
