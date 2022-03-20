@@ -16,3 +16,10 @@ s.bind(('127.0.0.1', port))            # Bind to the port
 s.listen(5)                     # Now wait for client connection.
 print("Waiting for client to connect")
 
+while True:
+    conn, addr = s.accept()     # Establish connection with client.
+    print("Accepted connection request from client")
+    
+    
+    #Close the socket once the transmission is complete
+    #conn.close();
