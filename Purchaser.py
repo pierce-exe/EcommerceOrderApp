@@ -10,6 +10,7 @@ import socket
 import random
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
+from Crypto.Random import get_random_bytes
 import time
 
 
@@ -58,7 +59,6 @@ while True:
     conn, addr = s.accept()     # Establish connection with client.
     print("Accepted connection request from client")
     
-
     #Connect to the socket of the OrderDept when sending an order
     #Connecting to the OrderDept socket 
     s_order = socket.socket()             # Create a socket object
@@ -108,9 +108,49 @@ while True:
     encrypt_msg2_super = public_key_super.encrypt(key_msg2.encode('utf-8'))
     conn.send(encrypt_msg2_super)
     
+    #Recieve msg2 key exchange from order department--------------------------
+    rec_msg2 = s_order.recv(1024)
     
+    #Decrypt the message with private key 
+    decrypted_key_msg2_order = priv_key_purch.decrypt(rec_msg2)
+    recv_nonce = decrypted_key_msg2_order[:8]
+    if(recv_nonce != nonce_purch):
+        print("Invalid nonce recieved from order department")
+        s_order.close()
         
+    timestamp = decrypted_key_msg2_order[16:]
+    valid_msg = timestamp_verify(timestamp)
+    if(~valid_msg):
+        print("Invalid key exchange message2 recieved from order department")
+        s_order.close()
+        
+    #Key exchange message 3 with order department-----------------------------    
+    #Send new message with the recieved nonce, session key and new timestamp
+    nonce_order = decrypted_key_msg2_order[8:16]
+    session_key_order = get_random_bytes(8)
+    key_msg3 = nonce_order + str(session_key_order) + str(time.time())
+    encrypt_msg3_order = public_key_order.encrypt(key_msg3)
+    s_order.send(encrypt_msg3_order)    
     
+    #Received key exchange message 3 with supervisor -------------------------
+    rec_msg3 = conn.recv(1024)
+        
+    #Decrypt the message with private key 
+    decrypted_key_msg3_super = priv_key_purch.decrypt(rec_msg3)
+    
+    #Check the nonce in the message 
+    rec_nonce = decrypted_key_msg3_super[:8]
+    if(rec_nonce != nonce_purch):
+        print("Invalid nonce received from supervisor")
+        conn.close()
+        
+    timestamp = decrypted_key_msg3_super[16:]
+    valid_msg = timestamp_verify(timestamp)
+    if(~valid_msg):
+        print("Invalid initial key exchange message recieved from supervisor")
+        conn.close()
+    
+    session_key_super = decrypted_key_msg3_super[8:16]
     
     #Close the socket once the transmission is complete
     #conn.close();
