@@ -10,6 +10,7 @@ import time
 import random
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
+from Crypto.Random import get_random_bytes
 
 
 #Define a function local to the Purchaser that will verify a message based on the timestamp
@@ -84,6 +85,48 @@ s_purch.send(encrypt_key_msg1_purch)
 encrypt_key_msg1_order = public_key_order.encrypt(key_msg1.encode('utf-8'))
 s_order.send(encrypt_key_msg1_order)
 
+#Key exchange message 2 from Purchaser and Order department ------------------
+msg2_purch = s_purch.recv(1024)
+decrypt_key_msg2_purch = priv_key_super.decrypt(msg2_purch)
+recv_nonce = decrypt_key_msg2_purch[:8]
+if(recv_nonce != nonce_super):
+    print("Invalid nonce received from purchaser")
+    s_purch.close()
+    
+timestamp = decrypt_key_msg2_purch[16:]
+valid_msg = timestamp_verify(timestamp)
+if(~valid_msg):
+    print("Invalid key exchange message2 received from purchaser")
+    s_purch.close()
+    
+msg2_order = s_order.recv(1024)
+decrypt_key_msg2_order = priv_key_super.decrypt(msg2_order)
+recv_nonce = decrypt_key_msg2_order[:8]
+if(recv_nonce != nonce_super):
+    print("Invalid nonce recieved from order deparment")
+    s_order.close()
+
+timestamp = decrypt_key_msg2_order[16:]
+valid_msg = timestamp_verify(timestamp)
+if(~valid_msg):
+    print("Invalid key exchange message2 received from order department")
+    s_order.close()
+
+
+#Key exchange message 3 send received nonce and session key ------------------
+nonce_purch = decrypt_key_msg2_purch[8:16]
+session_key_purch = get_random_bytes(8)
+
+nonce_order = decrypt_key_msg2_order[8:16]
+session_key_order = get_random_bytes(8)
+
+key_msg3_purch = nonce_purch + str(session_key_purch) + str(time.time())
+encrypt_msg3_purch = public_key_purch.encrypt(key_msg3_purch)
+s_purch.send(encrypt_msg3_purch)
+
+key_msg3_order = nonce_order + str(session_key_order) + str(time.time())
+encrypt_msg3_order = public_key_order.encrypt(key_msg3_order)
+s_order.send(encrypt_msg3_order)
 
 
 #Closing the s_order socket 
