@@ -18,3 +18,17 @@ s.bind(('127.0.0.1', port))            # Bind to the port
 s.listen(5)                     # Now wait for client connection.
 print("Waiting for client to connect")
 
+while True:
+    conn, addr = s.accept()     # Establish connection with client.
+    print("Accepted connection request from client")
+    
+
+    #Connect to the socket of the OrderDept when sending an order
+    #Connecting to the OrderDept socket 
+    #s = socket.socket()             # Create a socket object
+    #port = 60000                    # Reserve a port for your service.
+    
+    #s.connect(('127.0.0.1', port))
+
+    #Close the socket once the transmission is complete
+    #conn.close();
