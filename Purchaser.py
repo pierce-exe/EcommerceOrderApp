@@ -91,7 +91,25 @@ while True:
     s_order.send(encrypt_key_msg1_order)
 
     #Receive msg1 key exchange from supervisor -------------------------------
+    rec_msg1 = conn.recv(1024) 
     
+    #Decrypt the message with private key 
+    decrypted_key_msg1_super = priv_key_purch.decrypt(rec_msg1)
+    timestamp = decrypted_key_msg1_super[18:]
+    valid_msg = timestamp_verify(timestamp)
+    if(~valid_msg):
+        print("Invalid initial key exchange message recieved from supervisor")
+        conn.close()
+        
+    super_nonce = decrypted_key_msg1_super[:8]
+    
+    #Key exchange message 2: Send back to supervisor--------------------------
+    key_msg2 = super_nonce + nonce_purch + str(time.time())
+    encrypt_msg2_super = public_key_super.encrypt(key_msg2.encode('utf-8'))
+    conn.send(encrypt_msg2_super)
+    
+    
+        
     
     
     #Close the socket once the transmission is complete
