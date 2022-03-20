@@ -8,6 +8,19 @@ Created on Sat Mar 19
 import socket 
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
+import time 
+
+#Define a function local to the Purchaser that will verify a message based on the timestamp
+def timestamp_verify(rectime):
+    current_time = time.time() #get current timestamp in seconds
+    
+    if(current_time - rectime <= 60):
+        #If the difference is 60 or less (ie one min has passed since message was sent), message is valid
+        return True
+    
+    elif (current_time - rectime > 60):
+        #If the different is greater than 60, (ie more than one minute passed since message was sent), message in invalid
+        return False
 
 #Initailize the RSA key
 key = RSA.generate(2048)
