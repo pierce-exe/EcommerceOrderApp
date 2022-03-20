@@ -6,6 +6,26 @@ Created on Sat Mar 19
 """
 #List of imports needed for the code 
 import socket 
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
+
+#Initailize the RSA key
+key = RSA.generate(2048)
+
+#Generate private key 
+private_key = key.export_key()
+priv_key_order = RSA.importKey(private_key)
+priv_key_order = PKCS1_OAEP.new(priv_key_order)
+    
+#Generate public key 
+public_key = key.publickey().export_key()
+pub_key_order = RSA.importKey(public_key)
+public_key_order = PKCS1_OAEP.new(pub_key_order)
+    
+#Write the public key to the .pem file, accessible by Supervisor and Purchaser
+file_out = open("orderDept_public_key.pem", "wb")
+file_out.write(public_key)
+file_out.close()
 
 #The order department acts as a server, the purchaser and supervisor both connect to the socket 
 port = 60000                    # Reserve a port for your service.
@@ -20,6 +40,7 @@ while True:
     conn, addr = s.accept()     # Establish connection with client.
     print("Accepted connection request from client")
     
+
     
     #Close the socket once the transmission is complete
     #conn.close();
