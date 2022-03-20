@@ -85,7 +85,6 @@ while True:
  
     #Recieve key exchange msg 1 from both clients
     rec_msg1_purch = conn_purch.recv(1024)       
-    rec_msg1_super = conn_super.recv(1024)
 
     #Decrypt messages with private key 
     decrypted_key_msg1_purch = priv_key_order.decrypt(rec_msg1_purch)
@@ -95,6 +94,7 @@ while True:
         print("Invalid initial key exchange message recieved from supervisor")
         conn_purch.close()
     
+    rec_msg1_super = conn_super.recv(1024)
     #Decrypt messages with private key 
     decrypted_key_msg1_super = priv_key_order.decrypt(rec_msg1_super)
     timestamp = decrypted_key_msg1_super[18:]
@@ -117,6 +117,44 @@ while True:
     key_msg2_super = super_nonce + nonce_order + str(time.time())
     encrypt_msg2_super = public_key_super.encrypt(key_msg2_super.encode('utf-8'))
     conn_super.send(encrypt_msg2_super)
+    
+    #Recieving key exchange message 3 from supervisor and purchaser ----------
+    rec_msg3_super = conn_super.recv(1024)
+    #Decrypt messages with private key 
+    decrypted_key_msg3_super = priv_key_order.decrypt(rec_msg3_super)
+    
+    rec_nonce = decrypted_key_msg3_super[:8]
+    if(rec_nonce != nonce_order):
+        print("Incorrect nonce received from supervisor")
+        conn_super.close()
+    
+    timestamp = decrypted_key_msg3_super[16:]
+    valid_msg1 = timestamp_verify(timestamp)
+    if(~valid_msg1):
+        print("Invalid initial key exchange message recieved from supervisor")
+        conn_super.close()
+        
+    #Save the session key received by the supervisor 
+    session_key_super = decrypted_key_msg3_super[8:16]
+    
+    #Receiving message 3 from the purchaser
+    rec_msg3_purch = conn_purch.recv(1024)
+    #Decrypt messages with private key 
+    decrypted_key_msg3_purch = priv_key_order.decrypt(rec_msg3_purch)
+    
+    rec_nonce = decrypted_key_msg3_purch[:8]
+    if(rec_nonce != nonce_order):
+        print("Incorrect nonce received from supervisor")
+        conn_purch.close()
+    
+    timestamp = decrypted_key_msg3_purch[16:]
+    valid_msg1 = timestamp_verify(timestamp)
+    if(~valid_msg1):
+        print("Invalid initial key exchange message recieved from supervisor")
+        conn_purch.close()
+        
+    #Save the session key received by the supervisor 
+    session_key_purch = decrypted_key_msg3_purch[8:16]     
     
     
     #Close the socket once the transmission is complete
