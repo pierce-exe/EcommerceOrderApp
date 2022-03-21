@@ -12,17 +12,18 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Random import get_random_bytes
 import time
+from decimal import Decimal
 
 
 #Define a function local to the Purchaser that will verify a message based on the timestamp
 def timestamp_verify(rectime):
     current_time = time.time() #get current timestamp in seconds
     
-    if(current_time - rectime <= 60):
+    if(Decimal(current_time) - Decimal(rectime) <= 60):
         #If the difference is 60 or less (ie one min has passed since message was sent), message is valid
         return True
     
-    elif (current_time - rectime > 60):
+    elif (Decimal(current_time) - Decimal(rectime) > 60):
         #If the different is greater than 60, (ie more than one minute passed since message was sent), message in invalid
         return False
 
@@ -47,17 +48,17 @@ file_out.close()
 
 #The purchaser acts as a client to the OrderDept socket, and as a server to the Supervisor
 #Setting up the server socket 
-port = 30000                    # Reserve a port for your service.
+port = 60002                    # Reserve a port for your service.
 s = socket.socket()             # Create a socket object
 host = socket.gethostname()     # Get local machine name
 print(host)
 s.bind(('127.0.0.1', port))            # Bind to the port
 s.listen(5)                     # Now wait for client connection.
-print("Waiting for client to connect")
+print("Waiting for order department to connect")
 
 while True:
     conn, addr = s.accept()     # Establish connection with client.
-    print("Accepted connection request from client")
+    print("Accepted connection request from order department")
     
     #Connect to the socket of the OrderDept when sending an order
     #Connecting to the OrderDept socket 
@@ -94,10 +95,10 @@ while True:
     rec_msg1 = conn.recv(1024) 
     
     #Decrypt the message with private key 
-    decrypted_key_msg1_super = priv_key_purch.decrypt(rec_msg1)
+    decrypted_key_msg1_super = priv_key_purch.decrypt(rec_msg1).decode('utf-8')
     timestamp = decrypted_key_msg1_super[18:]
     valid_msg = timestamp_verify(timestamp)
-    if(~valid_msg):
+    if(not(valid_msg)):
         print("Invalid initial key exchange message recieved from supervisor")
         conn.close()
         
@@ -112,7 +113,7 @@ while True:
     rec_msg2 = s_order.recv(1024)
     
     #Decrypt the message with private key 
-    decrypted_key_msg2_order = priv_key_purch.decrypt(rec_msg2)
+    decrypted_key_msg2_order = priv_key_purch.decrypt(rec_msg2).decode('utf-8')
     recv_nonce = decrypted_key_msg2_order[:8]
     if(recv_nonce != nonce_purch):
         print("Invalid nonce recieved from order department")
@@ -120,7 +121,7 @@ while True:
         
     timestamp = decrypted_key_msg2_order[16:]
     valid_msg = timestamp_verify(timestamp)
-    if(~valid_msg):
+    if(not(valid_msg)):
         print("Invalid key exchange message2 recieved from order department")
         s_order.close()
         
@@ -129,14 +130,14 @@ while True:
     nonce_order = decrypted_key_msg2_order[8:16]
     session_key_order = get_random_bytes(8)
     key_msg3 = nonce_order + str(session_key_order) + str(time.time())
-    encrypt_msg3_order = public_key_order.encrypt(key_msg3)
+    encrypt_msg3_order = public_key_order.encrypt(key_msg3.encode('utf-8'))
     s_order.send(encrypt_msg3_order)    
     
     #Received key exchange message 3 with supervisor -------------------------
     rec_msg3 = conn.recv(1024)
         
     #Decrypt the message with private key 
-    decrypted_key_msg3_super = priv_key_purch.decrypt(rec_msg3)
+    decrypted_key_msg3_super = priv_key_purch.decrypt(rec_msg3).decode('utf-8')
     
     #Check the nonce in the message 
     rec_nonce = decrypted_key_msg3_super[:8]
@@ -146,7 +147,7 @@ while True:
         
     timestamp = decrypted_key_msg3_super[16:]
     valid_msg = timestamp_verify(timestamp)
-    if(~valid_msg):
+    if(not(valid_msg)):
         print("Invalid initial key exchange message recieved from supervisor")
         conn.close()
     
