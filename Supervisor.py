@@ -91,6 +91,7 @@ print("Sent initial key exchange message to the order department")
 
 #Key exchange message 2 from Purchaser and Order department ------------------
 msg2_purch = s_purch.recv(1024)
+print("Recieved second key exchange message from purchaser")
 decrypt_key_msg2_purch = priv_key_super.decrypt(msg2_purch).decode('utf-8')
 recv_nonce = decrypt_key_msg2_purch[:8]
 if(recv_nonce != nonce_super):
@@ -104,6 +105,7 @@ if(not(valid_msg)):
     s_purch.close()
     
 msg2_order = s_order.recv(1024)
+print("Received second key message from order department")
 decrypt_key_msg2_order = priv_key_super.decrypt(msg2_order).decode('utf-8')
 recv_nonce = decrypt_key_msg2_order[:8]
 if(recv_nonce != nonce_super):
@@ -118,19 +120,23 @@ if(not(valid_msg)):
 
 
 #Key exchange message 3 send received nonce and session key ------------------
-nonce_purch = decrypt_key_msg2_purch[8:15]
+nonce_purch = decrypt_key_msg2_purch[8:16]
+print("Purchaser nonce: ", nonce_purch)
 session_key_purch = get_random_bytes(8)
 
-nonce_order = decrypt_key_msg2_order[8:15]
-session_key_order = get_random_bytes(8)
+nonce_order = decrypt_key_msg2_order[8:16]
+print("Order department nonce: ", nonce_order)
+#session_key_order = get_random_bytes(8)
 
-key_msg3_purch = nonce_purch + str(session_key_purch) + str(time.time())
+key_msg3_purch = str(nonce_purch) + str(time.time())
 encrypt_msg3_purch = public_key_purch.encrypt(key_msg3_purch.encode('utf-8'))
 s_purch.send(encrypt_msg3_purch)
+print("Key exchange message 3, send to purchaser")
 
-key_msg3_order = nonce_order + str(session_key_order) + str(time.time())
+key_msg3_order = str(nonce_order) + str(time.time())
 encrypt_msg3_order = public_key_order.encrypt(key_msg3_order.encode('utf-8'))
 s_order.send(encrypt_msg3_order)
+print("Key exchange message 3, send to order department")
 
 
 #Closing the s_order socket 

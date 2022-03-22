@@ -131,6 +131,7 @@ while True:
     
     #Recieving key exchange message 3 from supervisor and purchaser ----------
     rec_msg3_super = conn_super.recv(1024)
+    print("Received key exchange message 3 from the supervisor")
     #Decrypt messages with private key 
     decrypted_key_msg3_super = priv_key_order.decrypt(rec_msg3_super).decode('utf-8')
     
@@ -139,7 +140,9 @@ while True:
         print("Incorrect nonce received from supervisor in key exchange message 3")
         conn_super.close()
     
-    timestamp = decrypted_key_msg3_super[18:]
+    #super_sessionkey = decrypted_key_msg3_super[8:16]
+    print("Key exchange message 3 supervisor session key")
+    timestamp = decrypted_key_msg3_super[10:]
     print("Message3 timestamp from supervisor: ", timestamp)
     valid_msg1 = timestamp_verify(timestamp)
     if(not(valid_msg1)):
@@ -147,7 +150,7 @@ while True:
         conn_super.close()
         
     #Save the session key received by the supervisor 
-    session_key_super = decrypted_key_msg3_super[8:16]
+    #session_key_super = decrypted_key_msg3_super[8:16]
     
     #Receiving message 3 from the purchaser
     rec_msg3_purch = conn_purch.recv(1024)

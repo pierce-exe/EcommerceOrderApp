@@ -151,13 +151,14 @@ while True:
         print("Invalid nonce received from supervisor")
         conn.close()
         
-    timestamp = decrypted_key_msg3_super[16:]
+    timestamp = decrypted_key_msg3_super[9:]
+    print("Key exchange message 3, supervisor timestamp: ", timestamp)
     valid_msg = timestamp_verify(timestamp)
     if(not(valid_msg)):
-        print("Invalid initial key exchange message recieved from supervisor")
+        print("Invalid timestamp recieved from supervisor key exchange message 3")
         conn.close()
     
-    session_key_super = decrypted_key_msg3_super[8:16]
+    #session_key_super = decrypted_key_msg3_super[8:16]
     
     #Close the socket once the transmission is complete
     #conn.close();
