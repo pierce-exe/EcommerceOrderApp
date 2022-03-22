@@ -83,9 +83,11 @@ key_msg1 = nonce_super + "SUPERVISOR" + str(time.time())
 #Encrypt the plaintext key message 1 and send to the purchaser and order department
 encrypt_key_msg1_purch = public_key_purch.encrypt(key_msg1.encode('utf-8'))
 s_purch.send(encrypt_key_msg1_purch)
+print("Sent initial key exchange message to the purchaser")
 
 encrypt_key_msg1_order = public_key_order.encrypt(key_msg1.encode('utf-8'))
 s_order.send(encrypt_key_msg1_order)
+print("Sent initial key exchange message to the order department")
 
 #Key exchange message 2 from Purchaser and Order department ------------------
 msg2_purch = s_purch.recv(1024)

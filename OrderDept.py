@@ -98,7 +98,7 @@ while True:
     timestamp = decrypted_key_msg1_purch[17:]
     valid_msg1 = timestamp_verify(timestamp)
     if(not(valid_msg1)):
-        print("Invalid initial key exchange message recieved from purchaser")
+        print("Invalid timestamp recieved from purchaser in key exchange message 1")
         conn_purch.close()
     
     rec_msg1_super = conn_super.recv(1024)
@@ -109,7 +109,7 @@ while True:
     valid_msg1 = timestamp_verify(timestamp)
     print("Timestamp_verify output: ", valid_msg1)
     if(not(valid_msg1)):
-        print("Invalid initial key exchange message recieved from supervisor")
+        print("Invalid timestamp recieved from supervisor in key exchange message 1")
         conn_super.close()
         
     #Save received nonce of purchaser and supervisor 
@@ -122,10 +122,12 @@ while True:
     key_msg2_purch = purch_nonce + nonce_order + str(time.time())
     encrypt_msg2_purch = public_key_purch.encrypt(key_msg2_purch.encode('utf-8'))
     conn_purch.send(encrypt_msg2_purch)
+    print("Sent key exchange message to the purchaser")
     
     key_msg2_super = super_nonce + nonce_order + str(time.time())
     encrypt_msg2_super = public_key_super.encrypt(key_msg2_super.encode('utf-8'))
     conn_super.send(encrypt_msg2_super)
+    print("Sent key exchange message to the supervisor")
     
     #Recieving key exchange message 3 from supervisor and purchaser ----------
     rec_msg3_super = conn_super.recv(1024)
@@ -134,14 +136,14 @@ while True:
     
     rec_nonce = decrypted_key_msg3_super[:8]
     if(rec_nonce != nonce_order):
-        print("Incorrect nonce received from supervisor")
+        print("Incorrect nonce received from supervisor in key exchange message 3")
         conn_super.close()
     
     timestamp = decrypted_key_msg3_super[18:]
     print("Message3 timestamp from supervisor: ", timestamp)
     valid_msg1 = timestamp_verify(timestamp)
-    if(~valid_msg1):
-        print("Invalid initial key exchange message recieved from supervisor")
+    if(not(valid_msg1)):
+        print("Invalid timestamp received from supervisor in key exchange message 3")
         conn_super.close()
         
     #Save the session key received by the supervisor 
@@ -159,7 +161,7 @@ while True:
     
     timestamp = decrypted_key_msg3_purch[16:]
     valid_msg1 = timestamp_verify(timestamp)
-    if(~valid_msg1):
+    if(not(valid_msg1)):
         print("Invalid initial key exchange message recieved from supervisor")
         conn_purch.close()
         

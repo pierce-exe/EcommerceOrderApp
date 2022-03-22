@@ -90,9 +90,11 @@ while True:
     
     encrypt_key_msg1_order = public_key_order.encrypt(key_msg1.encode('utf-8'))
     s_order.send(encrypt_key_msg1_order)
+    print("Sent initial key exchange message to order department")
 
     #Receive msg1 key exchange from supervisor -------------------------------
     rec_msg1 = conn.recv(1024) 
+    print("Received initial key exchange message from supervisor")
     
     #Decrypt the message with private key 
     decrypted_key_msg1_super = priv_key_purch.decrypt(rec_msg1).decode('utf-8')
@@ -108,9 +110,11 @@ while True:
     key_msg2 = super_nonce + nonce_purch + str(time.time())
     encrypt_msg2_super = public_key_super.encrypt(key_msg2.encode('utf-8'))
     conn.send(encrypt_msg2_super)
+    print("Sent key exchange message 2 to the supervisor")
     
     #Recieve msg2 key exchange from order department--------------------------
     rec_msg2 = s_order.recv(1024)
+    print("Recieved key exchange message 2 from the order department")
     
     #Decrypt the message with private key 
     decrypted_key_msg2_order = priv_key_purch.decrypt(rec_msg2).decode('utf-8')
@@ -132,9 +136,11 @@ while True:
     key_msg3 = nonce_order + str(session_key_order) + str(time.time())
     encrypt_msg3_order = public_key_order.encrypt(key_msg3.encode('utf-8'))
     s_order.send(encrypt_msg3_order)    
+    print("Sent key exchange message 3 to the order department")
     
     #Received key exchange message 3 with supervisor -------------------------
     rec_msg3 = conn.recv(1024)
+    print("Received key exchange message 3 from the supervisor")
         
     #Decrypt the message with private key 
     decrypted_key_msg3_super = priv_key_purch.decrypt(rec_msg3).decode('utf-8')
