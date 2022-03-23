@@ -161,6 +161,8 @@ while True:
         print("Invalid timestamp recieved from supervisor key exchange message 3")
         conn.close()
     
+    #END OF KEY EXCHANGE ---------------------------------------------------
+        
     
     #Close the socket once the transmission is complete
     #conn.close();

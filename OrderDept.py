@@ -167,5 +167,7 @@ while True:
         print("Invalid initial key exchange message recieved from supervisor")
         conn_purch.close()
             
+        #END OF KEY EXCHANGE -------------------------------------------------    
+        
     #Close the socket once the transmission is complete
     #conn.close();

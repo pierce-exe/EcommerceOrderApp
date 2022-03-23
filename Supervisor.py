@@ -142,6 +142,7 @@ encrypt_msg3_order = public_key_order.encrypt(key_msg3_order.encode('utf-8'))
 s_order.send(encrypt_msg3_order)
 print("Key exchange message 3, send to order department")
 
+#END OF KEY EXCHANGE ---------------------------------------------------------
 
 #Closing the s_order socket 
 #s_order.close()
