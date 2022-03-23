@@ -17,12 +17,17 @@ from decimal import Decimal
 #Define a function local to the Purchaser that will verify a message based on the timestamp
 def timestamp_verify(rectime):
     current_time = time.time() #get current timestamp in seconds
+    print("Received time: ", rectime)
+    print("Current time: ", current_time)
+    current_time = time.time() #get current timestamp in seconds
     if(Decimal(current_time) - Decimal(rectime) <= 60.00):
         #If the difference is 60 or less (ie one min has passed since message was sent), message is valid
+        print("timestamp_verify returning true")
         return True
     
     elif (Decimal(current_time) - Decimal(rectime) > 60.00):
         #If the different is greater than 60, (ie more than one minute passed since message was sent), message in invalid
+        print("timestamp_verify returning false")
         return False
 
 #Initailize the RSA key-------------------------------------------------------
@@ -126,7 +131,6 @@ session_key_purch = get_random_bytes(8)
 
 nonce_order = decrypt_key_msg2_order[8:16]
 print("Order department nonce: ", nonce_order)
-#session_key_order = get_random_bytes(8)
 
 key_msg3_purch = str(nonce_purch) + str(time.time())
 encrypt_msg3_purch = public_key_purch.encrypt(key_msg3_purch.encode('utf-8'))

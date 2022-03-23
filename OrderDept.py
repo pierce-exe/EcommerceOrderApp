@@ -47,7 +47,7 @@ file_out = open("orderDept_public_key.pem", "wb")
 file_out.write(public_key)
 file_out.close()
 
-#Creating a second TCP socket for the supervisor to connect to 
+#Creating a TCP socket for the supervisor to connect to 
 port = 60001                    # Reserve a port for your service.
 s_super = socket.socket()             # Create a socket object
 host = socket.gethostname()     # Get local machine name
@@ -142,18 +142,16 @@ while True:
     
     #super_sessionkey = decrypted_key_msg3_super[8:16]
     print("Key exchange message 3 supervisor session key")
-    timestamp = decrypted_key_msg3_super[10:]
+    timestamp = decrypted_key_msg3_super[8:]
     print("Message3 timestamp from supervisor: ", timestamp)
     valid_msg1 = timestamp_verify(timestamp)
     if(not(valid_msg1)):
         print("Invalid timestamp received from supervisor in key exchange message 3")
         conn_super.close()
-        
-    #Save the session key received by the supervisor 
-    #session_key_super = decrypted_key_msg3_super[8:16]
     
     #Receiving message 3 from the purchaser
     rec_msg3_purch = conn_purch.recv(1024)
+    print("Received message 3 from the purchaser")
     #Decrypt messages with private key 
     decrypted_key_msg3_purch = priv_key_order.decrypt(rec_msg3_purch).decode('utf-8')
     
@@ -162,15 +160,12 @@ while True:
         print("Incorrect nonce received from supervisor")
         conn_purch.close()
     
-    timestamp = decrypted_key_msg3_purch[16:]
+    timestamp = decrypted_key_msg3_purch[8:]
+    print("Key exchange message 3 from purchaser timestamp: ", timestamp)
     valid_msg1 = timestamp_verify(timestamp)
     if(not(valid_msg1)):
         print("Invalid initial key exchange message recieved from supervisor")
         conn_purch.close()
-        
-    #Save the session key received by the supervisor 
-    session_key_purch = decrypted_key_msg3_purch[8:16]     
-    
-    
+            
     #Close the socket once the transmission is complete
     #conn.close();

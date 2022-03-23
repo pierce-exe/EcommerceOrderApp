@@ -18,13 +18,17 @@ from decimal import Decimal
 #Define a function local to the Purchaser that will verify a message based on the timestamp
 def timestamp_verify(rectime):
     current_time = time.time() #get current timestamp in seconds
+    print("Received time: ", rectime)
+    print("Current time: ", current_time)
     
     if(Decimal(current_time) - Decimal(rectime) <= 60):
         #If the difference is 60 or less (ie one min has passed since message was sent), message is valid
+        print("timestamp_verify returning true")
         return True
     
     elif (Decimal(current_time) - Decimal(rectime) > 60):
         #If the different is greater than 60, (ie more than one minute passed since message was sent), message in invalid
+        print("timestamp_verify returning false")
         return False
 
 
@@ -132,8 +136,7 @@ while True:
     #Key exchange message 3 with order department-----------------------------    
     #Send new message with the recieved nonce, session key and new timestamp
     nonce_order = decrypted_key_msg2_order[8:16]
-    session_key_order = get_random_bytes(8)
-    key_msg3 = nonce_order + str(session_key_order) + str(time.time())
+    key_msg3 = str(nonce_order) + str(time.time())
     encrypt_msg3_order = public_key_order.encrypt(key_msg3.encode('utf-8'))
     s_order.send(encrypt_msg3_order)    
     print("Sent key exchange message 3 to the order department")
@@ -151,14 +154,13 @@ while True:
         print("Invalid nonce received from supervisor")
         conn.close()
         
-    timestamp = decrypted_key_msg3_super[9:]
+    timestamp = decrypted_key_msg3_super[8:]
     print("Key exchange message 3, supervisor timestamp: ", timestamp)
     valid_msg = timestamp_verify(timestamp)
     if(not(valid_msg)):
         print("Invalid timestamp recieved from supervisor key exchange message 3")
         conn.close()
     
-    #session_key_super = decrypted_key_msg3_super[8:16]
     
     #Close the socket once the transmission is complete
     #conn.close();
