@@ -5,13 +5,15 @@ Created on Sat Mar 19
 @author: Harkiran, Pierce, Jenita
 """
 
-#List of imports needed for the code 
+#List of imports needed for the code
+from Crypto.Hash import SHA256
 import socket 
 import random
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Random import get_random_bytes
 import time
+from Crypto.Signature import PKCS1_v1_5
 from decimal import Decimal
 
 
@@ -162,7 +164,58 @@ while True:
         conn.close()
     
     #END OF KEY EXCHANGE ---------------------------------------------------
+    #START OF ORDER --------------------------------------------------------
+    # sign hashed order file using SHA256
+    order_file = "order.pdf" # location of order file
+    BLOCK_SIZE = 65536  # The size of each read from the file
+    signer = PKCS1_v1_5.new(key)
+    digest = SHA256.new()
+
+    with open(order_file, 'rb') as f:
+        fb = f.read(BLOCK_SIZE)  # read from file
+        while len(fb) > 0:
+            digest.update(fb) # update hash
+            fb = f.read(BLOCK_SIZE) # read next block
+    sign_hashed_order_file = signer.sign(digest)
+
+    with open(order_file, 'rb') as file:
+            original = file.read()
         
+    # send length of signed file
+    length = len(original)
+    conn.send((str(length)).encode())
+
+
+    with open("file_with_hash.pdf", 'wb') as fh:
+        fh.write("ORDER-1".encode())
+        fh.write(original)
+        fh.write(sign_hashed_order_file)
+
+    # send signed file to supervisor
+    myfile = open("file_with_hash.pdf", 'rb')
+    l = myfile.read(1024)
+
+    while l:
+        print("sending...")
+        conn.send(l)
+        l = myfile.read(1024)
+    myfile.close()
+    conn.shutdown(socket.SHUT_WR)
+    print("Sent signed order file to supervisor") 
+
+    # send signed file to orderdepartment  
+    myfile = open("file_with_hash.pdf", 'rb')
+    line = myfile.read(1024)
+
+    while line:
+        print("sending...")
+        s_order.send(line)
+        line = myfile.read(1024)
+    myfile.close()
+    s_order.shutdown(socket.SHUT_WR)
+    print("Sent signed order file to OrderDepartment")
+
+    # ORDER COMPLETE-----------------------------------------------------------
     
     #Close the socket once the transmission is complete
     #conn.close();

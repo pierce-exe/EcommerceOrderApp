@@ -5,11 +5,13 @@ Created on Sat Mar 19
 @author: Harkiran, Pierce, Jenita
 """
 #List of imports needed for the code 
+from Crypto.Hash import SHA256
 import socket 
 import time 
 import random
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
+from Crypto.Signature import PKCS1_v1_5
 from Crypto.Random import get_random_bytes
 from decimal import Decimal
 
@@ -142,10 +144,38 @@ encrypt_msg3_order = public_key_order.encrypt(key_msg3_order.encode('utf-8'))
 s_order.send(encrypt_msg3_order)
 print("Key exchange message 3, send to order department")
 
-#END OF KEY EXCHANGE ---------------------------------------------------------
+# END OF KEY EXCHANGE ---------------------------------------------------------
+# START OF ORDER --------------------------------------------------------------
+# receive length of signed hash
+length_of_original = s_purch.recv(1024)     # receives the length of the original message 
+end_line = int(length_of_original.decode())
 
-#Closing the s_order socket 
-#s_order.close()
+myfile =  open("received_order_file_with_hash.pdf",'wb') # create a local file to save the incoming data 
+data = s_purch.recv(1024)
+while data:
+    print("receiving...")
+    myfile.write(data)
+    data = s_purch.recv(1024)
+myfile.close()
+
+#verify order
+all_text = open("received_order_file_with_hash.pdf", 'rb').read()
+orderID, original, signed_order = all_text[:7].decode(), all_text[7:end_line+7], all_text[end_line+7:] # split the orderID, original file content, hash
+signer = PKCS1_v1_5.new(pub_key_purch)
+digest = SHA256.new()
+digest.update(original)
+if not signer.verify(digest, signed_order):  # verification 
+    print("Verification failed!")
+    s_purch.close()
+print("Verification successful!")
+
+#approve order
+approved_order_details = orderID + "T" + "SUPERVISOR" # orderID: ORDER-1 
+encrypt_approval = public_key_order.encrypt(approved_order_details.encode('utf-8')) # encrypt the approval message with order dept's public key
+s_order.send(encrypt_approval)  # send approval to order dept
+print("Approval Sent to OrderDepartment")
+
+# ORDER COMPLETE-------------------------------------------------------------------------
 
 #Closing the s_purch socket
 #s_purch.close()
