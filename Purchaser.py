@@ -181,9 +181,12 @@ while True:
     with open(order_file, 'rb') as file:
             original = file.read()
         
-    # send length of signed file
+    # send length of signed file to supervisor
     length = len(original)
     conn.send((str(length)).encode())
+    
+    # send length of signed file to order department
+    s_order.send((str(length)).encode())
 
 
     with open("file_with_hash.pdf", 'wb') as fh:
@@ -202,7 +205,8 @@ while True:
     myfile.close()
     conn.shutdown(socket.SHUT_WR)
     print("Sent signed order file to supervisor") 
-
+    
+    
     # send signed file to orderdepartment  
     myfile = open("file_with_hash.pdf", 'rb')
     line = myfile.read(1024)
