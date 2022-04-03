@@ -60,9 +60,9 @@ host = socket.gethostname()     # Get local machine name
 print(host)
 s.bind(('127.0.0.1', port))            # Bind to the port
 s.listen(5)                     # Now wait for client connection.
-print("Waiting for order department to connect")
 
 while True:
+    print("Waiting for order department to connect")
     conn, addr = s.accept()     # Establish connection with client.
     print("Accepted connection request from order department")
     
@@ -222,4 +222,7 @@ while True:
     # ORDER COMPLETE-----------------------------------------------------------
     
     #Close the socket once the transmission is complete
-    #conn.close();
+    #Closing the socket where the Purchaser is the client, OrderDept is the server
+    s_order.close();
+    #Closing the conn socket (Purchase is server, Supervisor is client)
+    conn.close();

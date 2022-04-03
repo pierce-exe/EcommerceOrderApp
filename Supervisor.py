@@ -177,5 +177,8 @@ print("Approval Sent to OrderDepartment")
 
 # ORDER COMPLETE-------------------------------------------------------------------------
 
-#Closing the s_purch socket
-#s_purch.close()
+#Closing the s_purch socket where the Supervisor is a client, Purchaser is a server
+s_purch.close()
+
+#Closing the s_order socket where the Supervisor is a client, OrderDept is a server
+s_order.close()
