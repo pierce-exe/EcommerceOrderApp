@@ -176,7 +176,7 @@ while True:
     #Receiving Purchaser's Order
     length_of_original = conn_purch.recv(1024)     # receives the length of the original message
     print(length_of_original)
-    print("Received order from the purchaser")
+    print("Received order size from the purchaser")
     end_line = int(length_of_original.decode())    
     
     
@@ -185,12 +185,12 @@ while True:
     print("Received approval message from the supervisor")
     #Decrypt message
     decrypted_key_msg3_super = priv_key_order.decrypt(rec_appr_msg_super).decode('utf-8')
-    print(decrypted_key_msg3_super)
+    print("Supervisor's full approval message:",decrypted_key_msg3_super)
     orderID1, approval, superID2 = decrypted_key_msg3_super[:7], decrypted_key_msg3_super[7:1+7], decrypted_key_msg3_super[1+7:] # split the orderID, original file content, hash
     
-    print(orderID1)
-    print(approval)
-    print(superID2)
+    print("OrderID1:",orderID1)
+    print("Approval:",approval)
+    print("supervisor's ID2:",superID2)
     
     if (superID1 != superID2):
         print("Incorrect ID received from supervisor in approval message")
@@ -198,26 +198,26 @@ while True:
     
     if (approval != "T"):
         print("Purchase order not approved")
-        conn_super.close()        
+        conn_super.close()
+        conn_purch.close()
     
     
     myfile =  open("received_order_orddept_with_hash.pdf",'wb') # create a local file to save the incoming data 
     data = conn_purch.recv(1024)
-    print("Data:")
-    print(data)
     while data:
-        # print("receiving...")
+        print("receiving...")
         myfile.write(data)
         data = conn_purch.recv(1024)
-        print(data)
     myfile.close()
+    print("Received order from the purchaser")
     
     
     #verify order
     all_text = open("received_order_orddept_with_hash.pdf", 'rb').read()
     orderID2, order, signed_order = all_text[:7].decode('utf-8'), all_text[7:end_line+7], all_text[end_line+7:] # split the orderID, original file content, hash
-    print(orderID2)
-    print(signed_order)
+    print("OrderID2:",orderID2)
+    print("Signed Order:",signed_order)
+    
     if (orderID1 != orderID2):
         print("Incorrect ID received from purchaser in approval message")
         conn_purch.close()
