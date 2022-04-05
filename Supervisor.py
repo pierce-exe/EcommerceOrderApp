@@ -128,11 +128,11 @@ if(not(valid_msg)):
 
 #Key exchange message 3 send received nonce and session key ------------------
 nonce_purch = decrypt_key_msg2_purch[8:16]
-print("Purchaser nonce: ", nonce_purch)
+print("Purchaser nonce:", nonce_purch)
 session_key_purch = get_random_bytes(8)
 
 nonce_order = decrypt_key_msg2_order[8:16]
-print("Order department nonce: ", nonce_order)
+print("Order department nonce:", nonce_order)
 
 key_msg3_purch = str(nonce_purch) + str(time.time())
 encrypt_msg3_purch = public_key_purch.encrypt(key_msg3_purch.encode('utf-8'))
@@ -173,7 +173,7 @@ print("Verification successful!")
 approved_order_details = orderID + "T" + "SUPERVISOR" # orderID: ORDER-1 
 encrypt_approval = public_key_order.encrypt(approved_order_details.encode('utf-8')) # encrypt the approval message with order dept's public key
 s_order.send(encrypt_approval)  # send approval to order dept
-print("Approval Sent to OrderDepartment")
+print("Approval Sent to Order Department")
 
 # ORDER COMPLETE-------------------------------------------------------------------------
 

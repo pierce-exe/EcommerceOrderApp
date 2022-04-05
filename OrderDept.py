@@ -205,7 +205,7 @@ while True:
     myfile =  open("received_order_orddept_with_hash.pdf",'wb') # create a local file to save the incoming data 
     data = conn_purch.recv(1024)
     while data:
-        print("receiving...")
+        # print("receiving...")
         myfile.write(data)
         data = conn_purch.recv(1024)
     myfile.close()

@@ -157,7 +157,7 @@ while True:
         conn.close()
         
     timestamp = decrypted_key_msg3_super[8:]
-    print("Key exchange message 3, supervisor timestamp: ", timestamp)
+    print("Key exchange message 3, supervisor timestamp:", timestamp)
     valid_msg = timestamp_verify(timestamp)
     if(not(valid_msg)):
         print("Invalid timestamp recieved from supervisor key exchange message 3")
@@ -177,6 +177,7 @@ while True:
             digest.update(fb) # update hash
             fb = f.read(BLOCK_SIZE) # read next block
     sign_hashed_order_file = signer.sign(digest)
+    print("Hashed and signed by the Purchaser using the Purchaser's private key")
 
     with open(order_file, 'rb') as file:
             original = file.read()
@@ -204,7 +205,7 @@ while True:
         l = myfile.read(1024)
     myfile.close()
     conn.shutdown(socket.SHUT_WR)
-    print("Sent signed order file to supervisor") 
+    print("Sent signed order file to Supervisor") 
     
     
     # send signed file to orderdepartment  
@@ -217,7 +218,7 @@ while True:
         line = myfile.read(1024)
     myfile.close()
     s_order.shutdown(socket.SHUT_WR)
-    print("Sent signed order file to OrderDepartment")
+    print("Sent signed order file to Order Department")
 
     # ORDER COMPLETE-----------------------------------------------------------
     
