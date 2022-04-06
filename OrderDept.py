@@ -11,6 +11,8 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 import time
 from decimal import Decimal
+from Crypto.Signature import PKCS1_v1_5
+from Crypto.Hash import SHA256
 
 #Define a function local to the OrderDept that will verify a message based on the 
 
@@ -63,10 +65,10 @@ host = socket.gethostname()     # Get local machine name
 print(host)
 s_purch.bind(('127.0.0.1', port))            # Bind to the port
 s_purch.listen(5)                     # Now wait for client connection.
-print("Waiting for purchaser client to connect")
 
 
 while True:
+    print("Waiting for purchaser and supervisor to connect")
     conn_purch, addr = s_purch.accept()     # Establish connection with client.
     print("Accepted connection request from purchaser client")
     
@@ -105,6 +107,7 @@ while True:
     print("OrderDept recieved message1 from supervisor")
     #Decrypt messages with private key 
     decrypted_key_msg1_super = priv_key_order.decrypt(rec_msg1_super).decode('utf-8')
+    superID1 = decrypted_key_msg1_super[8:18]
     timestamp = decrypted_key_msg1_super[18:]
     valid_msg1 = timestamp_verify(timestamp)
     print("Timestamp_verify output: ", valid_msg1)
@@ -167,7 +170,70 @@ while True:
         print("Invalid initial key exchange message recieved from supervisor")
         conn_purch.close()
             
-        #END OF KEY EXCHANGE -------------------------------------------------    
+    #END OF KEY EXCHANGE ------------------------------------------------------
+    #START OF ORDER------------------------------------------------------------
+    
+    #Receiving Purchaser's Order
+    length_of_original = conn_purch.recv(1024)     # receives the length of the original message
+    print(length_of_original)
+    print("Received order size from the purchaser")
+    end_line = int(length_of_original.decode())    
+    
+    
+    #Receiving Supervisor's Approval
+    rec_appr_msg_super = conn_super.recv(1024)
+    print("Received approval message from the supervisor")
+    #Decrypt message
+    decrypted_key_msg3_super = priv_key_order.decrypt(rec_appr_msg_super).decode('utf-8')
+    print("Supervisor's full approval message:",decrypted_key_msg3_super)
+    orderID1, approval, superID2 = decrypted_key_msg3_super[:7], decrypted_key_msg3_super[7:1+7], decrypted_key_msg3_super[1+7:] # split the orderID, original file content, hash
+    
+    print("OrderID1:",orderID1)
+    print("Approval:",approval)
+    print("supervisor's ID2:",superID2)
+    
+    if (superID1 != superID2):
+        print("Incorrect ID received from supervisor in approval message")
+        conn_super.close()
+    
+    if (approval != "T"):
+        print("Purchase order not approved")
+        conn_super.close()
+        conn_purch.close()
+    
+    
+    myfile =  open("received_order_orddept_with_hash.pdf",'wb') # create a local file to save the incoming data 
+    data = conn_purch.recv(1024)
+    while data:
+        # print("receiving...")
+        myfile.write(data)
+        data = conn_purch.recv(1024)
+    myfile.close()
+    print("Received order from the purchaser")
+    
+    
+    #verify order
+    all_text = open("received_order_orddept_with_hash.pdf", 'rb').read()
+    orderID2, order, signed_order = all_text[:7].decode('utf-8'), all_text[7:end_line+7], all_text[end_line+7:] # split the orderID, original file content, hash
+    print("OrderID2:",orderID2)
+    print("Signed Order:",signed_order)
+    
+    if (orderID1 != orderID2):
+        print("Incorrect ID received from purchaser in approval message")
+        conn_purch.close()
         
+    signer = PKCS1_v1_5.new(pub_key_purch)
+    digest = SHA256.new()
+    digest.update(order)
+    if not signer.verify(digest, signed_order):  # verification 
+        print("Verification failed!")
+        conn_purch.close()
+    print("Verification successful! The order can be placed.")
+    
+    #ORDER COMPLETE------------------------------------------------------------
     #Close the socket once the transmission is complete
-    #conn.close();
+    #Closing both sockets with the OrderDept as server, Purchaser and Supervisor as clients
+    conn_purch.close();
+    conn_super.close();
+    
+    

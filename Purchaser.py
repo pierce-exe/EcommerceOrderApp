@@ -60,9 +60,9 @@ host = socket.gethostname()     # Get local machine name
 print(host)
 s.bind(('127.0.0.1', port))            # Bind to the port
 s.listen(5)                     # Now wait for client connection.
-print("Waiting for order department to connect")
 
 while True:
+    print("Waiting for order department to connect")
     conn, addr = s.accept()     # Establish connection with client.
     print("Accepted connection request from order department")
     
@@ -157,7 +157,7 @@ while True:
         conn.close()
         
     timestamp = decrypted_key_msg3_super[8:]
-    print("Key exchange message 3, supervisor timestamp: ", timestamp)
+    print("Key exchange message 3, supervisor timestamp:", timestamp)
     valid_msg = timestamp_verify(timestamp)
     if(not(valid_msg)):
         print("Invalid timestamp recieved from supervisor key exchange message 3")
@@ -177,13 +177,17 @@ while True:
             digest.update(fb) # update hash
             fb = f.read(BLOCK_SIZE) # read next block
     sign_hashed_order_file = signer.sign(digest)
+    print("Hashed and signed by the Purchaser using the Purchaser's private key")
 
     with open(order_file, 'rb') as file:
             original = file.read()
         
-    # send length of signed file
+    # send length of signed file to supervisor
     length = len(original)
     conn.send((str(length)).encode())
+    
+    # send length of signed file to order department
+    s_order.send((str(length)).encode())
 
 
     with open("file_with_hash.pdf", 'wb') as fh:
@@ -201,8 +205,9 @@ while True:
         l = myfile.read(1024)
     myfile.close()
     conn.shutdown(socket.SHUT_WR)
-    print("Sent signed order file to supervisor") 
-
+    print("Sent signed order file to Supervisor") 
+    
+    
     # send signed file to orderdepartment  
     myfile = open("file_with_hash.pdf", 'rb')
     line = myfile.read(1024)
@@ -213,9 +218,12 @@ while True:
         line = myfile.read(1024)
     myfile.close()
     s_order.shutdown(socket.SHUT_WR)
-    print("Sent signed order file to OrderDepartment")
+    print("Sent signed order file to Order Department")
 
     # ORDER COMPLETE-----------------------------------------------------------
     
     #Close the socket once the transmission is complete
-    #conn.close();
+    #Closing the socket where the Purchaser is the client, OrderDept is the server
+    s_order.close();
+    #Closing the conn socket (Purchase is server, Supervisor is client)
+    conn.close();
