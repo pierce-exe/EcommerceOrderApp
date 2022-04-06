@@ -165,7 +165,7 @@ while True:
     
     #END OF KEY EXCHANGE ---------------------------------------------------
     #START OF ORDER --------------------------------------------------------
-    # sign hashed order file using SHA256
+    # sign hashed order file using SHA-256
     order_file = "order.pdf" # location of order file
     BLOCK_SIZE = 65536  # The size of each read from the file
     signer = PKCS1_v1_5.new(key)
@@ -200,7 +200,7 @@ while True:
     l = myfile.read(1024)
 
     while l:
-        print("sending...")
+        # print("sending...")
         conn.send(l)
         l = myfile.read(1024)
     myfile.close()
@@ -213,7 +213,7 @@ while True:
     line = myfile.read(1024)
 
     while line:
-        print("sending...")
+        # print("sending...")
         s_order.send(line)
         line = myfile.read(1024)
     myfile.close()

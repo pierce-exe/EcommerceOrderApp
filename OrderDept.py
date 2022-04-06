@@ -143,10 +143,9 @@ while True:
         print("Incorrect nonce received from supervisor in key exchange message 3")
         conn_super.close()
     
-    #super_sessionkey = decrypted_key_msg3_super[8:16]
     print("Key exchange message 3 supervisor session key")
     timestamp = decrypted_key_msg3_super[8:]
-    print("Message3 timestamp from supervisor: ", timestamp)
+    print("Message3 timestamp from supervisor:", timestamp)
     valid_msg1 = timestamp_verify(timestamp)
     if(not(valid_msg1)):
         print("Invalid timestamp received from supervisor in key exchange message 3")
@@ -175,7 +174,7 @@ while True:
     
     #Receiving Purchaser's Order
     length_of_original = conn_purch.recv(1024)     # receives the length of the original message
-    print(length_of_original)
+    # print("Size of order:",length_of_original)
     print("Received order size from the purchaser")
     end_line = int(length_of_original.decode())    
     
