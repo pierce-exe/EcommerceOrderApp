@@ -153,10 +153,11 @@ end_line = int(length_of_original.decode())
 myfile =  open("received_order_file_with_hash.pdf",'wb') # create a local file to save the incoming data 
 data = s_purch.recv(1024)
 while data:
-    print("receiving...")
+    # print("receiving...")
     myfile.write(data)
     data = s_purch.recv(1024)
 myfile.close()
+print("Received order from Purchaser")
 
 #verify order
 all_text = open("received_order_file_with_hash.pdf", 'rb').read()
@@ -167,7 +168,7 @@ digest.update(original)
 if not signer.verify(digest, signed_order):  # verification 
     print("Verification failed!")
     s_purch.close()
-print("Verification successful!")
+print("Verification of order is successful!")
 
 #approve order
 approved_order_details = orderID + "T" + "SUPERVISOR" # orderID: ORDER-1 
